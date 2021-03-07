@@ -1,3 +1,59 @@
+use std::env;
+use std::fs;
+
+enum Piece {
+    King,
+    Queen,
+    Knight,
+    Bishop,
+    Rook,
+    Pawn
+}
+
+struct ChessMove {
+    piece: Piece,
+    row: i8,
+    col: i8
+}
+
+struct ChessBoard {
+    rows: i8,
+    cols: i8
+}
+
+impl ChessBoard {
+    fn new() -> Self {
+        ChessBoard {
+            rows: 8,
+            cols: 8
+        }
+    }
+
+    fn validateMove(mv:ChessMove) {
+        
+    }
+}
+
+
+
 fn main() {
-    println!("Hello, world!");
+    let contents = match fs::read_to_string("./test/game1.txt") {
+        Err(why) => panic!("Couldn't read file because {}", why),
+        Ok(content) => content
+    };
+    
+    let mut white_moves:Vec<&str> = Vec::new();
+    let mut black_moves:Vec<&str> = Vec::new();
+    let mut moves = contents.split_whitespace();
+    for chess_move in moves {
+        let mut bw_moves = chess_move.split(",");
+        let white_move = match bw_moves.next() {
+            Some(mv) => white_moves.push(mv),
+            None => ()
+        };
+        let black_move = match bw_moves.next() {
+            Some(mv) => black_moves.push(mv),
+            None => ()
+        };
+    }
 }
