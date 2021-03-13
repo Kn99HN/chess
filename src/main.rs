@@ -1,5 +1,6 @@
 use std::env;
 use std::fs;
+use std::convert::From;
 
 enum Piece {
     King,
@@ -40,7 +41,24 @@ impl ChessBoard {
     fn validatePieceMove(mv:ChessMove) {
         
     }
+}
 
+impl ChessMove {
+    fn new(mv:&str) -> Self {
+        let piecech = mv.chars().next().unwrap();
+        match piecech {
+            'K' => ChessMove { piece: Piece::King, row: 0, col: 0},
+            'Q' => ChessMove { piece: Piece::Queen, row: 0, col: 0},
+            'N' => ChessMove { piece: Piece::Knight, row: 0, col: 0},
+            'B' => ChessMove { piece: Piece::Bishop, row: 0, col: 0},
+            'R' => ChessMove { piece: Piece::Rook, row: 0, col: 0},
+            _ => ChessMove { piece: Piece::Pawn, row: 0, col: 0}
+        }
+    }
+
+    fn convertCol(col:char) {
+        
+    }
 }
 
 
