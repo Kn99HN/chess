@@ -18,20 +18,29 @@ struct ChessMove {
 
 struct ChessBoard {
     rows: i8,
-    cols: i8
+    cols: i8,
+    board: [i8; 64]
 }
 
 impl ChessBoard {
     fn new() -> Self {
         ChessBoard {
             rows: 8,
-            cols: 8
+            cols: 8,
+            board: [0; 64]
         }
     }
 
+    // validate whether the move is within the board
     fn validateMove(mv:ChessMove) {
         
     }
+
+    // validate a move from the piece is valid or not
+    fn validatePieceMove(mv:ChessMove) {
+        
+    }
+
 }
 
 
