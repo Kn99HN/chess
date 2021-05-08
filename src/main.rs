@@ -1,7 +1,6 @@
-use std::env;
 use std::fs;
-use std::convert::From;
 
+#[derive(Copy, Clone)]
 enum Piece {
     King,
     Queen,
@@ -11,76 +10,150 @@ enum Piece {
     Pawn
 }
 
-struct ChessMove {
+#[derive(Copy, Clone)]
+enum Player {
+    Black,
+    White
+}
+
+#[derive(Copy, Clone)]
+struct ChessPiece {
     piece: Piece,
-    row: i8,
-    col: i8
+    player: Player 
+}
+
+#[derive(Copy, Clone)]
+struct Square {
+    value: Option<ChessPiece>,
+}
+
+impl Square {
+    fn new() -> Self {
+        Square {
+            value: None
+        }
+    }
+
+    pub fn init(&mut self, piece: ChessPiece){
+        self.value = Some(piece);
+    }
 }
 
 struct ChessBoard {
     rows: i8,
     cols: i8,
-    board: [i8; 64]
+    board: [Square; 64]
 }
 
 impl ChessBoard {
     fn new() -> Self {
+        let mut chessBoard = [Square::new(); 64];
+        chessBoard[0].init(ChessPiece {
+            piece: Piece::Rook,
+            player: Player::Black
+        });
+        chessBoard[7].init(ChessPiece {
+            piece: Piece::Rook,
+            player: Player::Black
+        });
+
+        chessBoard[1].init(ChessPiece {
+            piece: Piece::Knight,
+            player: Player::Black
+        });
+        chessBoard[6].init(ChessPiece {
+            piece: Piece::Knight,
+            player: Player::Black
+        });
+
+        chessBoard[2].init(ChessPiece {
+            piece: Piece::Bishop,
+            player: Player::Black
+        });
+        chessBoard[5].init(ChessPiece {
+            piece: Piece::Bishop,
+            player: Player::Black
+        });
+
+        chessBoard[3].init(ChessPiece {
+            piece: Piece::Queen,
+            player: Player::Black
+        });
+        chessBoard[4].init(ChessPiece {
+            piece: Piece::King,
+            player: Player::Black
+        });
+
+
+        chessBoard[56].init(ChessPiece {
+            piece: Piece::Rook,
+            player: Player::White
+        });
+        chessBoard[63].init(ChessPiece {
+            piece: Piece::Rook,
+            player: Player::White
+        });
+
+        chessBoard[57].init(ChessPiece {
+            piece: Piece::Knight,
+            player: Player::White
+        });
+        chessBoard[62].init(ChessPiece {
+            piece: Piece::Knight,
+            player: Player::White
+        });
+
+        chessBoard[58].init(ChessPiece {
+            piece: Piece::Bishop,
+            player: Player::White
+        });
+        chessBoard[61].init(ChessPiece {
+            piece: Piece::Bishop,
+            player: Player::White
+        });
+
+        chessBoard[59].init(ChessPiece {
+            piece: Piece::Queen,
+            player: Player::White
+        });
+        chessBoard[60].init(ChessPiece {
+            piece: Piece::King,
+            player: Player::White
+        });
+
+        for idx in 8..15 {
+            chessBoard[idx].init(ChessPiece {
+                piece: Piece::Pawn,
+                player: Player::Black
+            })
+        }
+
+        for idx in 48..55 {
+            chessBoard[idx].init(ChessPiece {
+                piece: Piece::Pawn,
+                player: Player::White
+            });
+        }
+
         ChessBoard {
             rows: 8,
             cols: 8,
-            board: [0; 64]
+            board: chessBoard
         }
-    }
-
-    // validate whether the move is within the board
-    fn validateMove(mv:ChessMove) {
-        
-    }
-
-    // validate a move from the piece is valid or not
-    fn validatePieceMove(mv:ChessMove) {
-        
     }
 }
 
-impl ChessMove {
-    fn new(mv:&str) -> Self {
-        let piecech = mv.chars().next().unwrap();
-        match piecech {
-            'K' => ChessMove { piece: Piece::King, row: 0, col: 0},
-            'Q' => ChessMove { piece: Piece::Queen, row: 0, col: 0},
-            'N' => ChessMove { piece: Piece::Knight, row: 0, col: 0},
-            'B' => ChessMove { piece: Piece::Bishop, row: 0, col: 0},
-            'R' => ChessMove { piece: Piece::Rook, row: 0, col: 0},
-            _ => ChessMove { piece: Piece::Pawn, row: 0, col: 0}
-        }
-    }
-
-    fn convertCol(col:char) {
-        
-    }
+struct Operations {
+    op: String,
+    from: String,
+    to: String,
 }
-
-
 
 fn main() {
-    let contents = match fs::read_to_string("./test/game1.txt") {
+    let contents = match fs::read_to_string("./inputs/game1.txt") {
         Err(why) => panic!("Couldn't read file because {}", why),
         Ok(content) => content
     };
     
-    let mut white_moves:Vec<&str> = Vec::new();
-    let mut black_moves:Vec<&str> = Vec::new();
     let mut moves = contents.split_whitespace();
-    for chess_move in moves {
-        let mut bw_moves = chess_move.split(",");
-        let white_move = match bw_moves.next() {
-            Some(mv) => white_moves.push(mv),
-            None => ()
-        };
-        let black_move = match bw_moves.next() {
-            Some(mv) => black_moves.push(mv),
-            None => ()
-        };
-    }
 }
