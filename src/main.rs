@@ -195,8 +195,8 @@ pub fn validate_move(op: Operation, chess_board: ChessBoard) -> bool {
     let from_piece = from_square.value;
     let to_piece = to_square.value;
     match (from_piece, to_piece)  {
-        (Some(a), None) => true,
-        (Some(a), Some(b)) => true,
+        (Some(a), None) => return validate_move_by_piece(a, from, to),
+        (Some(a), Some(b)) => return validate_move_by_pieces(a, b, from, to),
         (None, Some(b)) => false,
         (None, None) => false,
     }
@@ -208,8 +208,46 @@ pub fn validate_move_by_piece(chess_piece: ChessPiece, from: usize, to: usize) -
         Piece::Pawn => (from + 8) == to,
         Piece::King => (from + 8) == to,
         Piece::Rook => return validate_horizontal_or_vertical(from, to),
-        Piece::Knight => {
-            let from_col = get_col(from);
+        Piece::Knight => return validate_L_shape(from, to),
+        Piece::Bishop => return validate_diagonals(from, to),
+        Piece::Queen => return validate_diagonals(from, to) && validate_horizontal_or_vertical(from, to),
+    };
+}
+
+pub fn validate_move_by_pieces(from_piece: ChessPiece, to_piece: ChessPiece, from: usize, to: usize) -> bool {
+    let from_piece_val = from_piece.piece;
+    let to_piece_val = to_piece.piece;
+    let from_piece_player = from_piece.player;
+    let to_piece_player = to_piece.player;
+    return match (from_piece_val, to_piece_val, from_piece_player, to_piece_player) {
+        (Piece::Pawn, Piece::Pawn, Player::White, Player::Black) => {
+            return (get_col(from) + 1 == get_col(to) && get_row(from) + 1 == get_row(to)) ||
+                    (get_col(from) - 1 == get_col(to) && get_row(from) + 1 == get_row(to))
+        },
+        (Piece::Pawn, Piece::Pawn, Player::Black, Player::White) => {
+            return (get_col(from) + 1 == get_col(to) && get_row(from) -1 == get_row(to)) ||
+                    (get_col(from) - 1 == get_col(to) && get_row(from) - 1 == get_row(to))
+        },
+        (Piece::Queen, _, _, _) => {
+            return validate_diagonals(from, to) && validate_horizontal_or_vertical(from, to);
+        },
+        (Piece::Bishop, _, _, _) => {
+            return validate_diagonals(from, to);
+        },
+        (Piece::Knight, _, _, _) => {
+            return validate_L_shape(from, to);
+        },
+        (Piece::Rook, _, _, _) => {
+            return validate_horizontal_or_vertical(from, to);
+        },
+        (_, _, Player::Black, Player::Black) => false,
+        (_, _, Player::White, Player::White) => false, 
+        (_, _, _, _) => false,
+    }
+}
+
+pub fn validate_L_shape(from: usize, to:usize) -> bool {
+    let from_col = get_col(from);
             let from_row = get_row(from);
             let to_col = get_col(to);
             let to_row = get_row(to);
@@ -222,13 +260,9 @@ pub fn validate_move_by_piece(chess_piece: ChessPiece, from: usize, to: usize) -
                 (from_col - to_col == 2 && from_row - to_row == 1) || 
                 (from_col - to_col == 1 && from_row - to_row == 2) || 
                 (from_col - to_col == 1 && to_row - from_row == 2)
-        },
-        Piece::Bishop => return validate_diagonal(from, to),
-        Piece::Queen => return validate_diagonal(from, to) && validate_horizontal_or_vertical(from, to),
-    };
 }
 
-pub fn validate_diagonal(from: usize, to: usize) -> bool {
+pub fn validate_diagonals(from: usize, to: usize) -> bool {
     let from_col = get_col(from);
     let from_row = get_row(from);
     let to_col = get_col(to);
