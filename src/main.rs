@@ -207,9 +207,51 @@ pub fn validate_move_by_piece(chess_piece: ChessPiece, from: usize, to: usize) -
     return match current_piece {
         Piece::Pawn => (from + 8) == to,
         Piece::King => (from + 8) == to,
-        // @ToDo: Determine how to validate other moves
-        _ => false
+        Piece::Rook => return validate_horizontal_or_vertical(from, to),
+        Piece::Knight => {
+            let from_col = get_col(from);
+            let from_row = get_row(from);
+            let to_col = get_col(to);
+            let to_row = get_row(to);
+            return
+                (to_col - from_col == 1 && to_row - to_col == 2) ||
+                (to_col - from_col == 1 && to_col - to_row == 2) || 
+                (to_col - from_col == 2 && to_row - from_row == 1) || 
+                (to_col - from_col == 2 && from_row - to_row == 1) || 
+                (from_col - to_col == 2 && to_row - from_row == 1) ||
+                (from_col - to_col == 2 && from_row - to_row == 1) || 
+                (from_col - to_col == 1 && from_row - to_row == 2) || 
+                (from_col - to_col == 1 && to_row - from_row == 2)
+        },
+        Piece::Bishop => return validate_diagonal(from, to),
+        Piece::Queen => return validate_diagonal(from, to) && validate_horizontal_or_vertical(from, to),
     };
+}
+
+pub fn validate_diagonal(from: usize, to: usize) -> bool {
+    let from_col = get_col(from);
+    let from_row = get_row(from);
+    let to_col = get_col(to);
+    let to_row = get_row(to);
+    for i in 1..7 {
+        if (from_col + i == to_col && from_row + i == to_row) || (from_col - i == to_col && from_row + i == to_row) ||
+            (from_col - i == to_col && from_row + i == to_row) || (from_col + i == to_col && from_row - i == to_row) {
+                return true;
+            }
+    }
+    return false;
+}
+
+pub fn validate_horizontal_or_vertical(from: usize, to: usize) -> bool {
+    return (get_col(from) == get_col(to) || get_row(from) == get_row(to)) && (from - to) > 0;
+}
+
+pub fn get_col(idx: usize) -> usize {
+    return (idx - (idx % 8)) / 8;
+}
+
+pub fn get_row(idx: usize) -> usize {
+    return idx % 8;
 }
 
 fn main() {
