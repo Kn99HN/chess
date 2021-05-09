@@ -261,40 +261,70 @@ pub fn validate_unblocked_move(chess_board: ChessBoard, chess_piece: ChessPiece,
                 if from_row < to_row {
                     for i in from_row..to_row {
                         return match board[to_idx(i, from_col)].value {
-                            (Some(a)) => false,
-                            (None) => true,
+                            Some(a) => false,
+                            None => true,
                         };
                     }
                 } else if from_row > to_row {
                     for i in to_row..from_row {
                         return match board[to_idx(i, from_col)].value {
-                            (Some(a)) => false,
-                            (None) => true,
+                            Some(a) => false,
+                            None => true,
                         };
                     }
                 }
-                return false;
             } else if from_row == to_row {
                 if from_col < to_col {
                     for i in from_col..to_col {
                         return match board[to_idx(from_row, i)].value {
-                            (Some(a)) => false,
-                            (None) => true,
+                            Some(a) => false,
+                            None => true,
                         };
                     }
                 } else if to_col < from_col {
                     for i in to_col..from_col {
                         return match board[to_idx(from_row, i)].value {
-                            (Some(a)) => false,
-                            (None) => true,
+                            Some(a) => false,
+                            None => true,
                         };
                     }
                 } 
-                return false;
             }
             return false;
         },
-        (_, _) => false
+        (Piece::Bishop) => {
+            if from_row < to_row && from_col < to_col {
+                for (i, j) in (from_row..to_row).zip(from_col..to_col) {
+                    return match board[to_idx(i, j)].value {
+                        Some(a) => false,
+                        None => true,
+                    }
+                }
+            } else if from_row > to_row && from_col > to_col {
+                for (i, j) in (to_row..from_row).zip(to_col..from_col) {
+                    return match board[to_idx(i, j)].value {
+                        Some(a) => false,
+                        None => true
+                    }
+                }
+            } else if from_row < to_row && from_col > to_col {
+                for (i, j) in (from_row..to_row).zip(to_col..from_col) {
+                    return match board[to_idx(i, j)].value {
+                        Some(a) => false,
+                        None => true
+                    }
+                }
+            } else if from_row > to_row && from_col < to_col {
+                for (i, j) in (to_row..from_row).zip(from_col..to_col) {
+                    return match board[to_idx(i, j)].value {
+                        Some(a) => false,
+                        None => true,
+                    }
+                }
+            }
+            return false;
+        }
+        (_) => false
     }
 }
 
