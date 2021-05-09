@@ -190,13 +190,11 @@ pub fn validate_move(op: Operation, chess_board: ChessBoard) -> bool {
     }
     let from = op.from;
     let to = op.to;
-    let from_square = chess_board.board[from];
-    let to_square = chess_board.board[to];
-    let from_piece = from_square.value;
-    let to_piece = to_square.value;
+    let from_piece = chess_board.board[from].value;
+    let to_piece = chess_board.board[to].value;
     match (from_piece, to_piece)  {
         (Some(a), None) => return validate_move_by_piece(a, from, to),
-        (Some(a), Some(b)) => return validate_move_by_pieces(a, b, from, to),
+        (Some(a), Some(b)) => return validate_move_by_pieces(chess_board, a, b, from, to),
         (None, Some(b)) => false,
         (None, None) => false,
     }
@@ -214,7 +212,7 @@ pub fn validate_move_by_piece(chess_piece: ChessPiece, from: usize, to: usize) -
     };
 }
 
-pub fn validate_move_by_pieces(from_piece: ChessPiece, to_piece: ChessPiece, from: usize, to: usize) -> bool {
+pub fn validate_move_by_pieces(chess_board: ChessBoard, from_piece: ChessPiece, to_piece: ChessPiece, from: usize, to: usize) -> bool {
     let from_piece_val = from_piece.piece;
     let to_piece_val = to_piece.piece;
     let from_piece_player = from_piece.player;
@@ -227,6 +225,10 @@ pub fn validate_move_by_pieces(from_piece: ChessPiece, to_piece: ChessPiece, fro
         (Piece::Pawn, Piece::Pawn, Player::Black, Player::White) => {
             return (get_col(from) + 1 == get_col(to) && get_row(from) -1 == get_row(to)) ||
                     (get_col(from) - 1 == get_col(to) && get_row(from) - 1 == get_row(to))
+        },
+        (Piece::King, _, _, _) => {
+            return (get_col(from) + 1 == get_col(to) && get_row(from) + 1 == get_row(to)) ||
+                    (get_col(from) - 1 == get_col(to) && get_row(from) + 1 == get_row(to))
         },
         (Piece::Queen, _, _, _) => {
             return validate_diagonals(from, to) && validate_horizontal_or_vertical(from, to);
@@ -243,6 +245,56 @@ pub fn validate_move_by_pieces(from_piece: ChessPiece, to_piece: ChessPiece, fro
         (_, _, Player::Black, Player::Black) => false,
         (_, _, Player::White, Player::White) => false, 
         (_, _, _, _) => false,
+    }
+}
+
+pub fn validate_unblocked_move(chess_board: ChessBoard, chess_piece: ChessPiece, from: usize, to: usize) -> bool {
+    let board = chess_board.board;
+    let piece = chess_piece.piece;
+    let from_col = get_col(from);
+    let from_row = get_row(from);
+    let to_row = get_row(to);
+    let to_col = get_col(to);
+    return match (piece) {
+        (Piece::Rook) => {
+            if from_col == to_col {
+                if from_row < to_row {
+                    for i in from_row..to_row {
+                        return match board[to_idx(i, from_col)].value {
+                            (Some(a)) => false,
+                            (None) => true,
+                        };
+                    }
+                } else if from_row > to_row {
+                    for i in to_row..from_row {
+                        return match board[to_idx(i, from_col)].value {
+                            (Some(a)) => false,
+                            (None) => true,
+                        };
+                    }
+                }
+                return false;
+            } else if from_row == to_row {
+                if from_col < to_col {
+                    for i in from_col..to_col {
+                        return match board[to_idx(from_row, i)].value {
+                            (Some(a)) => false,
+                            (None) => true,
+                        };
+                    }
+                } else if to_col < from_col {
+                    for i in to_col..from_col {
+                        return match board[to_idx(from_row, i)].value {
+                            (Some(a)) => false,
+                            (None) => true,
+                        };
+                    }
+                } 
+                return false;
+            }
+            return false;
+        },
+        (_, _) => false
     }
 }
 
@@ -286,6 +338,10 @@ pub fn get_col(idx: usize) -> usize {
 
 pub fn get_row(idx: usize) -> usize {
     return idx % 8;
+}
+
+pub fn to_idx(row: usize, col: usize) -> usize {
+    return row * 8 + col;
 }
 
 fn main() {
