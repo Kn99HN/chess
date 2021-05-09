@@ -17,13 +17,13 @@ enum Player {
 }
 
 #[derive(Copy, Clone)]
-struct ChessPiece {
+pub struct ChessPiece {
     piece: Piece,
     player: Player 
 }
 
 #[derive(Copy, Clone)]
-struct Square {
+pub struct Square {
     value: Option<ChessPiece>,
 }
 
@@ -39,9 +39,7 @@ impl Square {
     }
 }
 
-struct ChessBoard {
-    rows: i8,
-    cols: i8,
+pub struct ChessBoard {
     board: [Square; 64]
 }
 
@@ -136,8 +134,6 @@ impl ChessBoard {
         }
 
         ChessBoard {
-            rows: 8,
-            cols: 8,
             board: chess_board
         }
     }
@@ -146,8 +142,8 @@ impl ChessBoard {
 #[derive(Debug)]
 pub struct Operation {
     op: String,
-    from: u32,
-    to: u32,
+    from: usize,
+    to: usize,
 }
 
 pub fn parse(content: &str) -> Operation {
@@ -177,7 +173,7 @@ pub fn parse(content: &str) -> Operation {
     }
 }
 
-pub fn convert_to_idx(chess_move: &str) -> u32 {
+pub fn convert_to_idx(chess_move: &str) -> usize {
     let mut chars = chess_move.chars();
     let start = 'A' as u32;
     let col = chars.next().unwrap() as u32;
@@ -185,7 +181,35 @@ pub fn convert_to_idx(chess_move: &str) -> u32 {
         Some(val) => val,
         None => panic!("Something wrong")
     };
-    return (col - start) + (row - 1)* 8;
+    return ((col - start) + (row - 1)* 8) as usize;
+}
+
+pub fn validate_move(op: Operation, chess_board: ChessBoard) -> bool {
+    if op.from >= 64 || op.to >= 64 {
+        return false
+    }
+    let from = op.from;
+    let to = op.to;
+    let from_square = chess_board.board[from];
+    let to_square = chess_board.board[to];
+    let from_piece = from_square.value;
+    let to_piece = to_square.value;
+    match (from_piece, to_piece)  {
+        (Some(a), None) => true,
+        (Some(a), Some(b)) => true,
+        (None, Some(b)) => false,
+        (None, None) => false,
+    }
+}
+
+pub fn validate_move_by_piece(chess_piece: ChessPiece, from: usize, to: usize) -> bool {
+    let current_piece = chess_piece.piece;
+    return match current_piece {
+        Piece::Pawn => (from + 8) == to,
+        Piece::King => (from + 8) == to,
+        // @ToDo: Determine how to validate other moves
+        _ => false
+    };
 }
 
 fn main() {
@@ -195,5 +219,4 @@ fn main() {
     };
     
     let op = parse(&contents);
-    print!("{:?}", op)
 }
