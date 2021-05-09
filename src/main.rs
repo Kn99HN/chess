@@ -195,8 +195,7 @@ pub fn validate_move(op: Operation, chess_board: ChessBoard) -> bool {
     match (from_piece, to_piece)  {
         (Some(a), None) => return validate_move_by_piece(&chess_board, a, from, to),
         (Some(a), Some(b)) => return validate_move_by_pieces(&chess_board, a, b, from, to),
-        (None, Some(b)) => false,
-        (None, None) => false,
+        (_, _) => false,
     }
 }
 
@@ -270,44 +269,55 @@ pub fn validate_diagonals(chess_board: &ChessBoard, from: usize, to: usize) -> b
     let from_row = get_row(from);
     let to_col = get_col(to);
     let to_row = get_row(to);
-    let is_unblocked = true;
-    if (to_col - from_col != to_row - from_row && 
+    if to_col - from_col != to_row - from_row && 
         from_col - to_col != from_row - to_row &&
-        to_col - from_col != from-row - to_row &&
-        from_col - to_col != to_row - from_row) {
+        to_col - from_col != from_row - to_row &&
+        from_col - to_col != to_row - from_row {
             return false;
     }
 
     if from_row < to_row && from_col < to_col {
         for (i, j) in (from_row..to_row).zip(from_col..to_col) {
-            is_unblocked = match board[to_idx(i, j)].value {
+            let is_unblocked = match board[to_idx(i, j)].value {
                 Some(_) => false,
                 None => true,
+            };
+            if !is_unblocked {
+                return is_unblocked;
             }
         }
     } else if from_row > to_row && from_col > to_col {
         for (i, j) in (to_row..from_row).zip(to_col..from_col) {
-            is_unblocked = match board[to_idx(i, j)].value {
+            let is_unblocked = match board[to_idx(i, j)].value {
                 Some(_) => false,
                 None => true
+            };
+            if !is_unblocked {
+                return is_unblocked;
             }
         }
     } else if from_row < to_row && from_col > to_col {
         for (i, j) in (from_row..to_row).zip(to_col..from_col) {
-            is_unblocked = match board[to_idx(i, j)].value {
+            let is_unblocked = match board[to_idx(i, j)].value {
                 Some(_) => false,
                 None => true
+            };
+            if !is_unblocked {
+                return is_unblocked;
             }
         }
     } else if from_row > to_row && from_col < to_col {
         for (i, j) in (to_row..from_row).zip(from_col..to_col) {
-            is_unblocked = match board[to_idx(i, j)].value {
+            let is_unblocked = match board[to_idx(i, j)].value {
                 Some(_) => false,
-                None => true,
+                None => false,
+            };
+            if !is_unblocked {
+                return is_unblocked;
             }
         }
     }
-    return false;
+    return true;
 }
 
 pub fn validate_horizontal_or_vertical(chess_board: &ChessBoard, from: usize, to: usize) -> bool {
@@ -319,37 +329,49 @@ pub fn validate_horizontal_or_vertical(chess_board: &ChessBoard, from: usize, to
     if from_col == to_col {
         if from_row < to_row {
             for i in from_row..to_row {
-                return match board[to_idx(i, from_col)].value {
-                    Some(a) => false,
+                let is_unblocked = match board[to_idx(i, from_col)].value {
+                    Some(_) => false,
                     None => true,
                 };
+                if !is_unblocked {
+                    return is_unblocked;
+                }
             }
         } else if from_row > to_row {
             for i in to_row..from_row {
-                return match board[to_idx(i, from_col)].value {
-                    Some(a) => false,
+                let is_unblocked = match board[to_idx(i, from_col)].value {
+                    Some(_) => false,
                     None => true,
                 };
+                if !is_unblocked {
+                    return is_unblocked;
+                }
             }
         }
     } else if from_row == to_row {
         if from_col < to_col {
             for i in from_col..to_col {
-                return match board[to_idx(from_row, i)].value {
-                    Some(a) => false,
+                let is_unblocked = match board[to_idx(from_row, i)].value {
+                    Some(_) => false,
                     None => true,
                 };
+                if !is_unblocked {
+                    return is_unblocked
+                }
             }
         } else if to_col < from_col {
             for i in to_col..from_col {
-                return match board[to_idx(from_row, i)].value {
-                    Some(a) => false,
+                let is_unblocked = match board[to_idx(from_row, i)].value {
+                    Some(_) => false,
                     None => true,
                 };
+                if !is_unblocked {
+                    return is_unblocked
+                }
             }
         } 
     }
-    return false;
+    return true;
 }
 
 pub fn get_col(idx: usize) -> usize {
