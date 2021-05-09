@@ -40,7 +40,7 @@ impl Square {
 }
 
 pub struct ChessBoard {
-    board: [Square; 64]
+    board: [Square; 64], 
 }
 
 impl ChessBoard {
@@ -372,6 +372,28 @@ pub fn validate_horizontal_or_vertical(chess_board: &ChessBoard, from: usize, to
         } 
     }
     return true;
+}
+
+pub fn execute_move(op: Operation, chess_board: &ChessBoard) {
+    let from = op.from;
+    let to = op.to;
+    let mut board = (*chess_board).board;
+    let from_piece = board[from].value;
+    let to_piece = board[to].value;
+    match (from_piece, to_piece) {
+        (Some(a), Some(b)) => {
+            match (a.piece, b.piece) {
+              (_, Piece::King) => (),
+              (_, _) => {
+                  board[to] = board[from];
+              }
+            };
+        },
+        (Some(a), None) => {
+            board[to] = board[from];
+        },
+        (_, _) => ()
+    };
 }
 
 pub fn get_col(idx: usize) -> usize {
