@@ -193,26 +193,26 @@ pub fn validate_move(op: Operation, chess_board: ChessBoard) -> bool {
     let from_piece = chess_board.board[from].value;
     let to_piece = chess_board.board[to].value;
     match (from_piece, to_piece)  {
-        (Some(a), None) => return validate_move_by_piece(a, from, to),
-        (Some(a), Some(b)) => return validate_move_by_pieces(chess_board, a, b, from, to),
+        (Some(a), None) => return validate_move_by_piece(&chess_board, a, from, to),
+        (Some(a), Some(b)) => return validate_move_by_pieces(&chess_board, a, b, from, to),
         (None, Some(b)) => false,
         (None, None) => false,
     }
 }
 
-pub fn validate_move_by_piece(chess_piece: ChessPiece, from: usize, to: usize) -> bool {
+pub fn validate_move_by_piece(chess_board: &ChessBoard, chess_piece: ChessPiece, from: usize, to: usize) -> bool {
     let current_piece = chess_piece.piece;
     return match current_piece {
         Piece::Pawn => (from + 8) == to,
         Piece::King => (from + 8) == to,
-        Piece::Rook => return validate_horizontal_or_vertical(from, to),
-        Piece::Knight => return validate_L_shape(from, to),
-        Piece::Bishop => return validate_diagonals(from, to),
-        Piece::Queen => return validate_diagonals(from, to) && validate_horizontal_or_vertical(from, to),
+        Piece::Rook => return validate_horizontal_or_vertical(chess_board, from, to),
+        Piece::Knight => return validate_l_shape(from, to),
+        Piece::Bishop => return validate_diagonals(chess_board, from, to),
+        Piece::Queen => return validate_diagonals(chess_board, from, to) && validate_horizontal_or_vertical(chess_board, from, to),
     };
 }
 
-pub fn validate_move_by_pieces(chess_board: ChessBoard, from_piece: ChessPiece, to_piece: ChessPiece, from: usize, to: usize) -> bool {
+pub fn validate_move_by_pieces(chess_board: &ChessBoard, from_piece: ChessPiece, to_piece: ChessPiece, from: usize, to: usize) -> bool {
     let from_piece_val = from_piece.piece;
     let to_piece_val = to_piece.piece;
     let from_piece_player = from_piece.player;
@@ -231,16 +231,16 @@ pub fn validate_move_by_pieces(chess_board: ChessBoard, from_piece: ChessPiece, 
                     (get_col(from) - 1 == get_col(to) && get_row(from) + 1 == get_row(to))
         },
         (Piece::Queen, _, _, _) => {
-            return validate_diagonals(from, to) && validate_horizontal_or_vertical(from, to);
+            return validate_diagonals(chess_board, from, to) && validate_horizontal_or_vertical(chess_board, from, to);
         },
         (Piece::Bishop, _, _, _) => {
-            return validate_diagonals(from, to);
+            return validate_diagonals(chess_board, from, to);
         },
         (Piece::Knight, _, _, _) => {
-            return validate_L_shape(from, to);
+            return validate_l_shape(from, to);
         },
         (Piece::Rook, _, _, _) => {
-            return validate_horizontal_or_vertical(from, to);
+            return validate_horizontal_or_vertical(chess_board, from, to);
         },
         (_, _, Player::Black, Player::Black) => false,
         (_, _, Player::White, Player::White) => false, 
@@ -248,118 +248,101 @@ pub fn validate_move_by_pieces(chess_board: ChessBoard, from_piece: ChessPiece, 
     }
 }
 
-pub fn validate_unblocked_move(chess_board: ChessBoard, chess_piece: ChessPiece, from: usize, to: usize) -> bool {
-    let board = chess_board.board;
-    let piece = chess_piece.piece;
+pub fn validate_l_shape(from: usize, to:usize) -> bool {
     let from_col = get_col(from);
     let from_row = get_row(from);
-    let to_row = get_row(to);
     let to_col = get_col(to);
-    return match (piece) {
-        (Piece::Rook) => {
-            if from_col == to_col {
-                if from_row < to_row {
-                    for i in from_row..to_row {
-                        return match board[to_idx(i, from_col)].value {
-                            Some(a) => false,
-                            None => true,
-                        };
-                    }
-                } else if from_row > to_row {
-                    for i in to_row..from_row {
-                        return match board[to_idx(i, from_col)].value {
-                            Some(a) => false,
-                            None => true,
-                        };
-                    }
-                }
-            } else if from_row == to_row {
-                if from_col < to_col {
-                    for i in from_col..to_col {
-                        return match board[to_idx(from_row, i)].value {
-                            Some(a) => false,
-                            None => true,
-                        };
-                    }
-                } else if to_col < from_col {
-                    for i in to_col..from_col {
-                        return match board[to_idx(from_row, i)].value {
-                            Some(a) => false,
-                            None => true,
-                        };
-                    }
-                } 
+    let to_row = get_row(to);
+    return
+        (to_col - from_col == 1 && to_row - to_col == 2) ||
+        (to_col - from_col == 1 && to_col - to_row == 2) || 
+        (to_col - from_col == 2 && to_row - from_row == 1) || 
+        (to_col - from_col == 2 && from_row - to_row == 1) || 
+        (from_col - to_col == 2 && to_row - from_row == 1) ||
+        (from_col - to_col == 2 && from_row - to_row == 1) || 
+        (from_col - to_col == 1 && from_row - to_row == 2) || 
+        (from_col - to_col == 1 && to_row - from_row == 2)
+}
+
+// double check this logic
+pub fn validate_diagonals(chess_board: &ChessBoard, from: usize, to: usize) -> bool {
+    let board = (*chess_board).board;
+    let from_col = get_col(from);
+    let from_row = get_row(from);
+    let to_col = get_col(to);
+    let to_row = get_row(to);
+    if from_row < to_row && from_col < to_col {
+        for (i, j) in (from_row..to_row).zip(from_col..to_col) {
+            return match board[to_idx(i, j)].value {
+                Some(_) => false,
+                None => true,
             }
-            return false;
-        },
-        (Piece::Bishop) => {
-            if from_row < to_row && from_col < to_col {
-                for (i, j) in (from_row..to_row).zip(from_col..to_col) {
-                    return match board[to_idx(i, j)].value {
-                        Some(a) => false,
-                        None => true,
-                    }
-                }
-            } else if from_row > to_row && from_col > to_col {
-                for (i, j) in (to_row..from_row).zip(to_col..from_col) {
-                    return match board[to_idx(i, j)].value {
-                        Some(a) => false,
-                        None => true
-                    }
-                }
-            } else if from_row < to_row && from_col > to_col {
-                for (i, j) in (from_row..to_row).zip(to_col..from_col) {
-                    return match board[to_idx(i, j)].value {
-                        Some(a) => false,
-                        None => true
-                    }
-                }
-            } else if from_row > to_row && from_col < to_col {
-                for (i, j) in (to_row..from_row).zip(from_col..to_col) {
-                    return match board[to_idx(i, j)].value {
-                        Some(a) => false,
-                        None => true,
-                    }
-                }
-            }
-            return false;
         }
-        (_) => false
-    }
-}
-
-pub fn validate_L_shape(from: usize, to:usize) -> bool {
-    let from_col = get_col(from);
-            let from_row = get_row(from);
-            let to_col = get_col(to);
-            let to_row = get_row(to);
-            return
-                (to_col - from_col == 1 && to_row - to_col == 2) ||
-                (to_col - from_col == 1 && to_col - to_row == 2) || 
-                (to_col - from_col == 2 && to_row - from_row == 1) || 
-                (to_col - from_col == 2 && from_row - to_row == 1) || 
-                (from_col - to_col == 2 && to_row - from_row == 1) ||
-                (from_col - to_col == 2 && from_row - to_row == 1) || 
-                (from_col - to_col == 1 && from_row - to_row == 2) || 
-                (from_col - to_col == 1 && to_row - from_row == 2)
-}
-
-pub fn validate_diagonals(from: usize, to: usize) -> bool {
-    let from_col = get_col(from);
-    let from_row = get_row(from);
-    let to_col = get_col(to);
-    let to_row = get_row(to);
-    for i in 1..7 {
-        if (from_col + i == to_col && from_row + i == to_row) || (from_col - i == to_col && from_row + i == to_row) ||
-            (from_col - i == to_col && from_row + i == to_row) || (from_col + i == to_col && from_row - i == to_row) {
-                return true;
+    } else if from_row > to_row && from_col > to_col {
+        for (i, j) in (to_row..from_row).zip(to_col..from_col) {
+            return match board[to_idx(i, j)].value {
+                Some(_) => false,
+                None => true
             }
+        }
+    } else if from_row < to_row && from_col > to_col {
+        for (i, j) in (from_row..to_row).zip(to_col..from_col) {
+            return match board[to_idx(i, j)].value {
+                Some(_) => false,
+                None => true
+            }
+        }
+    } else if from_row > to_row && from_col < to_col {
+        for (i, j) in (to_row..from_row).zip(from_col..to_col) {
+            return match board[to_idx(i, j)].value {
+                Some(_) => false,
+                None => true,
+            }
+        }
     }
     return false;
 }
 
-pub fn validate_horizontal_or_vertical(from: usize, to: usize) -> bool {
-    return (get_col(from) == get_col(to) || get_row(from) == get_row(to)) && (from - to) > 0;
+pub fn validate_horizontal_or_vertical(chess_board: &ChessBoard, from: usize, to: usize) -> bool {
+    let board = (*chess_board).board;
+    let from_col = get_col(from);
+    let from_row = get_row(from);
+    let to_row = get_row(to);
+    let to_col = get_col(to);
+    if from_col == to_col {
+        if from_row < to_row {
+            for i in from_row..to_row {
+                return match board[to_idx(i, from_col)].value {
+                    Some(a) => false,
+                    None => true,
+                };
+            }
+        } else if from_row > to_row {
+            for i in to_row..from_row {
+                return match board[to_idx(i, from_col)].value {
+                    Some(a) => false,
+                    None => true,
+                };
+            }
+        }
+    } else if from_row == to_row {
+        if from_col < to_col {
+            for i in from_col..to_col {
+                return match board[to_idx(from_row, i)].value {
+                    Some(a) => false,
+                    None => true,
+                };
+            }
+        } else if to_col < from_col {
+            for i in to_col..from_col {
+                return match board[to_idx(from_row, i)].value {
+                    Some(a) => false,
+                    None => true,
+                };
+            }
+        } 
+    }
+    return false;
 }
 
 pub fn get_col(idx: usize) -> usize {
