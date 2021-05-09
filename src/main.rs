@@ -264,37 +264,44 @@ pub fn validate_l_shape(from: usize, to:usize) -> bool {
         (from_col - to_col == 1 && to_row - from_row == 2)
 }
 
-// double check this logic
 pub fn validate_diagonals(chess_board: &ChessBoard, from: usize, to: usize) -> bool {
     let board = (*chess_board).board;
     let from_col = get_col(from);
     let from_row = get_row(from);
     let to_col = get_col(to);
     let to_row = get_row(to);
+    let is_unblocked = true;
+    if (to_col - from_col != to_row - from_row && 
+        from_col - to_col != from_row - to_row &&
+        to_col - from_col != from-row - to_row &&
+        from_col - to_col != to_row - from_row) {
+            return false;
+    }
+
     if from_row < to_row && from_col < to_col {
         for (i, j) in (from_row..to_row).zip(from_col..to_col) {
-            return match board[to_idx(i, j)].value {
+            is_unblocked = match board[to_idx(i, j)].value {
                 Some(_) => false,
                 None => true,
             }
         }
     } else if from_row > to_row && from_col > to_col {
         for (i, j) in (to_row..from_row).zip(to_col..from_col) {
-            return match board[to_idx(i, j)].value {
+            is_unblocked = match board[to_idx(i, j)].value {
                 Some(_) => false,
                 None => true
             }
         }
     } else if from_row < to_row && from_col > to_col {
         for (i, j) in (from_row..to_row).zip(to_col..from_col) {
-            return match board[to_idx(i, j)].value {
+            is_unblocked = match board[to_idx(i, j)].value {
                 Some(_) => false,
                 None => true
             }
         }
     } else if from_row > to_row && from_col < to_col {
         for (i, j) in (to_row..from_row).zip(from_col..to_col) {
-            return match board[to_idx(i, j)].value {
+            is_unblocked = match board[to_idx(i, j)].value {
                 Some(_) => false,
                 None => true,
             }
