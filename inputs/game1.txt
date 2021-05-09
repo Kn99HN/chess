@@ -1,2 +1,1 @@
-e4,e5
-Nf3,Ne6
+Move E2,E4
