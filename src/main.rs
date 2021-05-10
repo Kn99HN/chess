@@ -389,10 +389,79 @@ pub fn execute_move(op: Operation, chess_board: &ChessBoard) {
               }
             };
         },
-        (Some(a), None) => {
+        (Some(_), None) => {
             board[to] = board[from];
         },
         (_, _) => ()
+    };
+}
+
+pub fn is_checked(op: Operation ,chess_board: &ChessBoard) -> bool {
+    let from = op.from;
+    let to = op.to;
+    let board = (*chess_board).board;
+    let from_piece = board[from].value;
+    let to_piece = board[to].value;
+    return match (from_piece, to_piece) {
+        (_, Some(a)) => {
+            return match a.piece {
+                Piece::King => true,
+                _ => false,
+            }
+        },
+        (_, _) => false
+    };
+}
+
+pub fn is_checkmated(op: Operation, chess_board: &ChessBoard) -> bool {
+    let from = op.from;
+    let to = op.to;
+    let board = (*chess_board).board;
+    let from_piece = board[from].value;
+    let to_piece = board[to].value;
+    return match (from_piece, to_piece) {
+        (_, Some(a)) => {
+            // check if king is surrounded
+            match a.piece {
+                Piece::King => {
+                    let (mut is_up_empty, mut is_down_empty, mut is_left_empty, mut is_right_empty) = (false, false, false, false);
+                    let up = to_idx(get_row(to) + 1, get_col(to));
+                    if up < 64 {
+                        is_up_empty = match board[up].value {
+                            Some(_) => false, 
+                            None => true
+                        }
+                    }
+                    let down = to_idx(get_row(to) - 1, get_col(to));
+                    if down >= 0 {
+                        is_down_empty = match board[down].value {
+                            Some(_) => false,
+                            None => true,
+                        }
+                    }
+                    let left = to_idx(get_row(to), get_col(to) - 1);
+                    if left >= 0 {
+                        is_left_empty = match board[left].value {
+                            Some(_) => false,
+                            None => true,
+                        }
+                    }
+                    let right = to_idx(get_row(to), get_col(to) + 1);
+                    if right < 64 {
+                        is_right_empty = match board[right].value {
+                            Some(_) => false,
+                            None => true
+                        }
+                    }
+                    if !is_up_empty && !is_down_empty && !is_left_empty && !is_right_empty {
+                        return true;
+                    }
+                    return false;
+                },
+                _ => false
+            }
+        },
+        (_, _) => false
     };
 }
 
