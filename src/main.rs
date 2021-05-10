@@ -1,7 +1,7 @@
 use std::fs;
 
 #[derive(Copy, Clone)]
-enum Piece {
+pub enum Piece {
     King,
     Queen,
     Knight,
@@ -10,8 +10,8 @@ enum Piece {
     Pawn
 }
 
-#[derive(Copy, Clone)]
-enum Player {
+#[derive(PartialEq, Copy, Clone)]
+pub enum Player {
     Black,
     White
 }
@@ -462,6 +462,56 @@ pub fn is_checkmated(op: Operation, chess_board: &ChessBoard) -> bool {
             }
         },
         (_, _) => false
+    };
+}
+
+pub fn is_checked_horizontal(chess_board: &ChessBoard, row: usize, col: usize, player: Player) -> bool {
+    let board = (*chess_board).board;
+    let piece = board[to_idx(row, col)].value;
+    match piece {
+        Some(a) => {
+            match a.piece {
+                Piece::Rook => {
+                    return a.player != player
+                },
+                Piece::Queen => {
+                    return a.player != player
+                },
+                _ => return false
+            }
+        },
+        None => {
+            if row == 0 || col == 0 || row == 7 || col == 7 {
+                return false;
+            }
+            return is_checked_horizontal(chess_board, row, col - 1, player) &&
+                is_checked_horizontal(chess_board, row, col + 1, player);
+        }
+    }
+}
+
+pub fn is_checked_vertical(chess_board: &ChessBoard, row: usize, col: usize, player: Player) -> bool {
+    let board = (*chess_board).board;
+    let piece = board[to_idx(row, col)].value;
+    match piece {
+        Some(a) => {
+            match a.piece {
+                Piece::Rook => {
+                    return a.player != player
+                },
+                Piece::Queen => {
+                    return a.player != player
+                },
+                _ => return false,
+            }
+        },
+        None => {
+            if row == 0 || col == 0 || row == 7 || col == 7 {
+                return false;
+            }
+            return is_checked_vertical(chess_board, row + 1, col, player) &&
+                is_checked_vertical(chess_board, row - 1, col, player);
+        }
     };
 }
 
