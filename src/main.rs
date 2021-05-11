@@ -413,56 +413,66 @@ pub fn is_checked(op: Operation ,chess_board: &ChessBoard) -> bool {
     };
 }
 
+pub fn is_empty_square(chess_board: &ChessBoard, row: usize, col: usize) -> bool {
+    let square_idx = to_idx(row, col);
+    let board = (*chess_board).board;
+    if square_idx < 64 && square_idx >= 0 {
+        return match board[square_idx].value {
+            Some(_) => false,
+            None => true,
+        };
+    }
+    return false;
+}
+
 pub fn is_checkmated(op: Operation, chess_board: &ChessBoard) -> bool {
     let from = op.from;
     let to = op.to;
     let board = (*chess_board).board;
     let from_piece = board[from].value;
     let to_piece = board[to].value;
+    let to_row = get_row(to);
+    let to_col = get_col(to);
     return match (from_piece, to_piece) {
         (_, Some(a)) => {
             // check if king is surrounded
             match a.piece {
                 Piece::King => {
-                    let (mut is_up_empty, mut is_down_empty, mut is_left_empty, mut is_right_empty) = (false, false, false, false);
-                    let up = to_idx(get_row(to) + 1, get_col(to));
-                    if up < 64 {
-                        is_up_empty = match board[up].value {
-                            Some(_) => false, 
-                            None => true
-                        }
-                    }
-                    let down = to_idx(get_row(to) - 1, get_col(to));
-                    if down >= 0 {
-                        is_down_empty = match board[down].value {
-                            Some(_) => false,
-                            None => true,
-                        }
-                    }
-                    let left = to_idx(get_row(to), get_col(to) - 1);
-                    if left >= 0 {
-                        is_left_empty = match board[left].value {
-                            Some(_) => false,
-                            None => true,
-                        }
-                    }
-                    let right = to_idx(get_row(to), get_col(to) + 1);
-                    if right < 64 {
-                        is_right_empty = match board[right].value {
-                            Some(_) => false,
-                            None => true
-                        }
-                    }
-                    if !is_up_empty && !is_down_empty && !is_left_empty && !is_right_empty {
+                    let is_up_empty = is_empty_square(chess_board, to_row + 1, to_col);
+                    let is_down_empty = is_empty_square(chess_board, to_row - 1, to_col);
+                    let is_left_empty = is_empty_square(chess_board, to_row, to_col - 1);
+                    let is_right_empty = is_empty_square(chess_board, to_row, to_col + 1);
+                    let is_left_up_empty = is_empty_square(chess_board, to_row + 1, to_col - 1);
+                    let is_left_down_empty = is_empty_square(chess_board, to_row - 1, to_col - 1);
+                    let is_right_up_empty = is_empty_square(chess_board, to_row + 1, to_col + 1);
+                    let is_right_down_empty = is_empty_square(chess_board, to_row - 1, to_col + 1);
+                    if !is_up_empty && !is_down_empty && !is_left_empty && !is_right_empty && 
+                        !is_left_up_empty && !is_left_down_empty && !is_right_up_empty && !is_right_down_empty {
                         return true;
                     }
-                    return false;
+
+                    let curr_player = a.player;
+                    return is_checked_square(chess_board, to_row + 1, to_col, curr_player) &&
+                        is_checked_square(chess_board, to_row - 1, to_col, curr_player) &&
+                        is_checked_square(chess_board, to_row, to_col + 1, curr_player) &&
+                        is_checked_square(chess_board, to_row, to_col - 1, curr_player) &&
+                        is_checked_square(chess_board, to_row + 1, to_col + 1, curr_player) &&
+                        is_checked_square(chess_board, to_row + 1, to_col - 1, curr_player) &&
+                        is_checked_square(chess_board, to_row - 1, to_col + 1, curr_player) &&
+                        is_checked_square(chess_board, to_row - 1, to_col - 1, curr_player);
                 },
                 _ => false
             }
         },
         (_, _) => false
     };
+}
+
+pub fn is_checked_square(chess_board: &ChessBoard, row: usize, col: usize, player: Player) -> bool {
+    return is_checked_horizontal(chess_board, row, col, player) &&
+        is_checked_vertical(chess_board, row, col, player) &&
+        is_checked_diagonal(chess_board, row, col, player) &&
+        is_checked_l_shape(chess_board, row, col, player);
 }
 
 pub fn is_checked_horizontal(chess_board: &ChessBoard, row: usize, col: usize, player: Player) -> bool {
